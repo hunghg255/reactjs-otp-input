@@ -104,8 +104,8 @@ const SingleOtpInput = memo((props: SingleOtpInputProps) => {
         aria-label={`${index === 0 ? 'Please enter verification code. ' : ''}${isInputNum ? 'Digit' : 'Character'} ${
           index + 1
         }`}
-        // Let iOS / Android suggest the SMS code; the whole code is filled into the first input
-        autoComplete={index === 0 ? 'one-time-code' : 'off'}
+        // Let iOS / Android suggest the SMS code on any input; the whole code is then spread across all inputs
+        autoComplete="one-time-code"
         type={isInputSecure ? 'password' : isInputNum ? 'tel' : 'text'}
         inputMode={isInputNum ? 'numeric' : 'text'}
         pattern={isInputNum ? '[0-9]*' : undefined}
@@ -210,26 +210,25 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>((props, ref) => {
     [emitChange]
   );
 
-  // Fill inputs starting at `index` with `data`; returns the index of the input to focus next
-  const fillFrom = useCallback(
-    (index: number, data: string) => {
+  // Spread `text` over the inputs starting at `index` (paste, keyboard clipboard, SMS autofill).
+  // A complete code always starts from the first input, wherever the user was.
+  const insertText = useCallback(
+    (index: number, text: string) => {
       const { numInputs, isInputNum, otp } = latest.current;
-      const chars = data
-        .split('')
-        .filter((c) => isValidChar(c, isInputNum))
-        .slice(0, numInputs - index);
+      const chars = text.split('').filter((c) => isValidChar(c, isInputNum));
 
       if (chars.length === 0) {
         return;
       }
 
+      const start = chars.length >= numInputs ? 0 : index;
       const nextOtp = Array.from({ length: numInputs }, (_, i) => otp[i] ?? '');
 
-      chars.forEach((c, i) => {
-        nextOtp[index + i] = c;
+      chars.slice(0, numInputs - start).forEach((c, i) => {
+        nextOtp[start + i] = c;
       });
       emitChange(nextOtp);
-      focusInput(index + chars.length);
+      focusInput(start + chars.length);
     },
     [emitChange, focusInput]
   );
@@ -237,7 +236,7 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>((props, ref) => {
   const handleChange = useCallback(
     (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
       const { value: inputValue } = e.target;
-      const { otp, numInputs, isInputNum } = latest.current;
+      const { otp, isInputNum } = latest.current;
       const current = otp[index] ?? '';
 
       // Android keyboards often fire keyCode 229 instead of Backspace, so the deletion arrives here
@@ -247,25 +246,35 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>((props, ref) => {
         return;
       }
 
-      // Autofill (one-time-code) or typing into an input whose content wasn't selected
-      if (inputValue.length > 1 && inputValue.length === numInputs) {
-        fillFrom(0, inputValue);
+      // The input can hold more than one character when the previous one wasn't selected
+      // (caret before/after it) or when text is inserted without a paste event
+      // (mobile keyboard clipboard suggestion, SMS autofill). Drop the previous character first.
+      let inserted = inputValue;
+
+      if (current && inputValue.length > 1) {
+        // The caret sits right after the inserted text, which tells us on which side the old character is
+        const caretAtEnd = (e.target.selectionStart ?? inputValue.length) === inputValue.length;
+
+        if (caretAtEnd && inputValue.startsWith(current)) {
+          inserted = inputValue.slice(1);
+        } else if (inputValue.endsWith(current)) {
+          inserted = inputValue.slice(0, -1);
+        } else if (inputValue.startsWith(current)) {
+          inserted = inputValue.slice(1);
+        }
+      }
+
+      if (inserted.length > 1) {
+        insertText(index, inserted);
         return;
       }
 
-      if (inputValue.length > 2) {
-        fillFrom(index, inputValue);
-        return;
-      }
-
-      const char = inputValue.length === 2 && inputValue[0] === current ? inputValue[1] : inputValue[0];
-
-      if (isValidChar(char, isInputNum)) {
-        updateAt(index, char);
+      if (isValidChar(inserted, isInputNum)) {
+        updateAt(index, inserted);
         focusInput(index + 1);
       }
     },
-    [fillFrom, focusInput, updateAt]
+    [focusInput, insertText, updateAt]
   );
 
   const handleKeyDown = useCallback(
@@ -292,7 +301,7 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>((props, ref) => {
         focusInput(index + 1);
       } else if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
-      } else if (e.key === otp[index]) {
+      } else if (e.key === otp[index] && !e.ctrlKey && !e.metaKey && !e.altKey) {
         // Same character typed again: the input value won't change, so move on manually
         e.preventDefault();
         focusInput(index + 1);
@@ -309,9 +318,9 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>((props, ref) => {
         return;
       }
 
-      fillFrom(index, e.clipboardData.getData('text/plain'));
+      insertText(index, e.clipboardData.getData('text/plain'));
     },
-    [fillFrom]
+    [insertText]
   );
 
   const handleFocus = useCallback((index: number, e: React.FocusEvent<HTMLInputElement>) => {

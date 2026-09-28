@@ -300,9 +300,11 @@ export const App = () => {
       <section id="autofill">
         <h2>SMS autofill</h2>
         <p>
-          The first input uses <code>autocomplete=&quot;one-time-code&quot;</code>, so iOS and Android suggest the code
-          received by SMS. When the whole code lands in one input it is spread across all of them. Pasting works the
-          same way from any input.
+          Inputs use <code>autocomplete=&quot;one-time-code&quot;</code>, so iOS and Android suggest the code received
+          by SMS. Pasting (long-press menu, <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>V</kbd> or the keyboard clipboard
+          suggestion) works from any input: a complete code always fills every input from the first one, a shorter text
+          continues from the focused input, and characters that aren&apos;t allowed (spaces, dashes, letters with{' '}
+          <code>isInputNum</code>) are skipped.
         </p>
       </section>
 
