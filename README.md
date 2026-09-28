@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://reactjs-otp-input-demo.vercel.app/">Live demo</a>
+  <a href="https://reactjs-otp-input-docs.vercel.app/">Live demo</a>
 </p>
 
 ![demo](https://media.giphy.com/media/lN98dFU6h3oP0wWS5x/giphy.gif)
