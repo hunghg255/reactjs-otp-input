@@ -4,8 +4,12 @@
   "description": "A fully customizable, one-time password input component for the web built with React",
   "scripts": {
     "build": "rollup -c",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
+    "docs:dev": "pnpm -C docs dev",
+    "docs:build": "pnpm -C docs build",
+    "docs:preview": "pnpm -C docs preview",
     "prepublishOnly": "npm run build",
     "release": "bumpp",
     "verify-commit": "verify-commit-msg",

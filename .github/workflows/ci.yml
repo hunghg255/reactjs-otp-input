@@ -50,7 +50,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm core:build
+        run: pnpm build
 
       - name: Typecheck
         run: pnpm typecheck
@@ -72,7 +72,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm core:build
+        run: pnpm build
 
       - name: Test
         run: pnpm test
