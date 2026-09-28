@@ -38,7 +38,7 @@ pnpm install reactjs-otp-input@latest
 ## Basic usage:
 
 ```jsx
-import React, { Component } from 'react';
+import { useState } from 'react';
 import { OtpInput } from 'reactjs-otp-input';
 
 const App = () => {
@@ -50,10 +50,14 @@ const App = () => {
 };
 ```
 
-## To run the development server:
+## Docs & playground
+
+The `docs` folder is a Vite + React app with a documentation page and an interactive playground. It imports the library straight from `src`, so changes show up instantly.
 
 ```
-npm run dev
+pnpm install
+pnpm docs:dev     # start the docs locally
+pnpm docs:build   # build the static site into docs/dist
 ```
 
 ## API
@@ -69,21 +73,21 @@ npm run dev
   <tr>
     <td>numInputs</td>
     <td>number</td>
-    <td>true</td>
+    <td>false</td>
     <td>4</td>
     <td>Number of OTP inputs to be rendered.</td>
   </tr>
   <tr>
     <td>onChange</td>
-    <td>function</td>
+    <td>(otp: string) => void</td>
     <td>true</td>
-    <td>console.log</td>
+    <td>-</td>
     <td>Returns OTP code typed in inputs.</td>
   </tr>
   <tr>
     <td>value</td>
     <td>string / number</td>
-    <td>true</td>
+    <td>false</td>
     <td>''</td>
     <td>The value of the OTP passed into the component.</td>
   </tr>
